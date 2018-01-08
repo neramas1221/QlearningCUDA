@@ -68,10 +68,55 @@ void generateQtable(double **qTable)
 		}
 	}
 }
-int getAction()
+int getAction(double **qTable, int state)
 {
 	int action;
+	double maxValue = -1;
+
+	for (int i = 0; i < NUMBER_OF_ACTIONS; i++)
+	{
+		if (qTable[state][i] >maxValue)
+		{
+			maxValue = qTable[state][i];
+				action = i;
+		}
+	}
+
 	return action;
+}
+int getRndAction(double **qTable, int state)
+{
+	int action = 0;
+	int maxValue = -1;
+	// rnd number betwene 1-10
+	for (int i = 0; i < NUMBER_OF_ACTIONS; i++)
+	{
+		if (qTable[state][i] >maxValue)
+		{
+			maxValue = qTable[state][i];
+			action = i;
+		}
+	}
+	return action;
+}
+int getReward(int state, int action)
+{
+	int reward = 0;
+	if (state == 4 && action == 1)
+	{
+		reward = 10;
+	}
+	return reward;
+}
+double updateQTable(int state, int action, int nextState,int reward,double** qTable )
+{
+	double updateValue = 0;
+	int nextAction;
+
+	nextAction = getAction(qTable, nextState);
+
+
+	return updateValue = 0;
 }
 int main()
 {
