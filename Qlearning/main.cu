@@ -8,7 +8,8 @@
 
 #define NUMBER_OF_STATES 11
 #define NUMBER_OF_ACTIONS 4
-
+#define NUMBER_OF_TRIALS 50
+#define NUMBER_OF_EPISODES 200
 
 void seedRandom()
 {
@@ -44,9 +45,19 @@ int transferFunction(int state, int action)
 			break;
 		}
 	case 2:
-		if (state == 6 || state == 3 || state == 5 || state == 4)
+		if (state == 3 || state == 4 || state == 5 || state == 6)
 		{
 			newState = state - 3;
+			break;
+		}
+		else if (state == 8)
+		{
+			newState = 4;
+			break;
+		}
+		else if (state == 10)
+		{
+			newState = 5;
 			break;
 		}
 	case 3:
@@ -64,7 +75,7 @@ void generateQtable(double **qTable)
 	{
 		for (int j = 0; j < NUMBER_OF_ACTIONS; j++)
 		{
-			qTable[i][j] = rand();
+			qTable[i][j] = (double)rand() / (double)((unsigned)RAND_MAX + 1)* (0.1);
 		}
 	}
 }
@@ -87,22 +98,31 @@ int getAction(double **qTable, int state)
 int getRndAction(double **qTable, int state)
 {
 	int action = 0;
-	int maxValue = -1;
-	// rnd number betwene 1-10
-	for (int i = 0; i < NUMBER_OF_ACTIONS; i++)
+	double maxValue = -1;
+	int rndValue;
+	rndValue = rand() % (10 + 1 - 1) + 1;
+	if (rndValue <= 9)
 	{
-		if (qTable[state][i] >maxValue)
+		for (int i = 0; i < NUMBER_OF_ACTIONS; i++)
 		{
-			maxValue = qTable[state][i];
-			action = i;
+			if (qTable[state][i] > maxValue)
+			{
+				action = i;
+				maxValue = qTable[state][i];
+			}
 		}
+	}
+	else
+	{
+		rndValue = rand() % (3 + 1 - 0) + 0;
+		action = rndValue;
 	}
 	return action;
 }
 int getReward(int state, int action)
 {
 	int reward = 0;
-	if (state == 4 && action == 1)
+	if (state == 4 && action == 2)
 	{
 		reward = 10;
 	}
@@ -113,7 +133,7 @@ double updateQTable(int state, int action, int nextState,int reward,double** qTa
 	double updateValue = 0;
 	int nextAction;
 	double discount = 0.9;
-	double learningRate;
+	double learningRate =0.2;
 	double diff;
 
 	nextAction = getAction(qTable, nextState);
@@ -122,7 +142,70 @@ double updateQTable(int state, int action, int nextState,int reward,double** qTa
 
 	return updateValue;
 }
+int rndState()
+{
+	int state = 0;
+	int Max = 10;
+	state = rand() % Max;
+	while (state == 1)
+	{
+		state = rand() % Max;
+	}
+	
+	return state;
+}
 int main()
 {
+	seedRandom();
 
+	double **qTable;
+	qTable = (double**)  malloc(NUMBER_OF_STATES * sizeof(double*));
+	for (int i = 0; i < NUMBER_OF_STATES; i++)
+	{
+		qTable[i] = (double*)malloc(sizeof(double)*NUMBER_OF_ACTIONS);
+	}
+	generateQtable(qTable);
+		for (int i = 0; i < NUMBER_OF_STATES; i++)
+		{
+			for (int j = 0; j < NUMBER_OF_ACTIONS; j++)
+			{
+				printf("vlaue at [%d][%d] : %f\n", i, j, qTable[i][j]);
+			}
+		}
+
+	int state = 0;
+	int action = 0;
+	int newState = 0;
+	int reward = 0;
+	int steps = 0;
+	double updatedValue = 0;
+	
+	for (int i = 0; i < NUMBER_OF_EPISODES; i++)
+	{
+		state = rndState();
+		while (state != 1)
+		{
+			action = getRndAction(qTable, state);
+			reward = getReward(state, action);
+			newState = transferFunction(state, action);
+			updatedValue = updateQTable(state, action, newState, reward, qTable);
+			qTable[state][action] = updatedValue;
+			//printf("state : %d , action : %d newState : %d\n", state, action, newState);
+			state = newState;
+			/*if (steps % 10 == 0)
+			{
+				for (int i = 0; i < NUMBER_OF_STATES; i++)
+				{
+					for (int j = 0; j < NUMBER_OF_ACTIONS; j++)
+					{
+						printf("vlaue at [%d][%d] : %f\n", i, j, qTable[i][j]);
+					}
+				}
+			}*/
+			steps++;
+		}
+		printf("steps : %d\n", steps);
+		steps = 0; 
+		//generateQtable(qTable);
+	}
 }
