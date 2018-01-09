@@ -165,13 +165,19 @@ int main()
 		qTable[i] = (double*)malloc(sizeof(double)*NUMBER_OF_ACTIONS);
 	}
 	generateQtable(qTable);
-		for (int i = 0; i < NUMBER_OF_STATES; i++)
+		/*for (int i = 0; i < NUMBER_OF_STATES; i++)
 		{
 			for (int j = 0; j < NUMBER_OF_ACTIONS; j++)
 			{
 				printf("vlaue at [%d][%d] : %f\n", i, j, qTable[i][j]);
 			}
-		}
+		}*/
+	int **allSteps;
+	allSteps = (int**)malloc(NUMBER_OF_TRIALS * sizeof(int*));
+	for (int i = 0; i < NUMBER_OF_TRIALS; i++)
+	{
+		allSteps[i] = (int*)malloc(sizeof(int)* NUMBER_OF_EPISODES);
+	}
 
 	int state = 0;
 	int action = 0;
@@ -179,33 +185,36 @@ int main()
 	int reward = 0;
 	int steps = 0;
 	double updatedValue = 0;
-	
-	for (int i = 0; i < NUMBER_OF_EPISODES; i++)
+	for (int trial = 0; trial < NUMBER_OF_TRIALS; trial++)
 	{
-		state = rndState();
-		while (state != 1)
+		for (int i = 0; i < NUMBER_OF_EPISODES; i++)
 		{
-			action = getRndAction(qTable, state);
-			reward = getReward(state, action);
-			newState = transferFunction(state, action);
-			updatedValue = updateQTable(state, action, newState, reward, qTable);
-			qTable[state][action] = updatedValue;
-			//printf("state : %d , action : %d newState : %d\n", state, action, newState);
-			state = newState;
-			/*if (steps % 10 == 0)
+			state = rndState();
+			while (state != 1)
 			{
-				for (int i = 0; i < NUMBER_OF_STATES; i++)
-				{
-					for (int j = 0; j < NUMBER_OF_ACTIONS; j++)
-					{
-						printf("vlaue at [%d][%d] : %f\n", i, j, qTable[i][j]);
-					}
-				}
-			}*/
-			steps++;
+				action = getRndAction(qTable, state);
+				reward = getReward(state, action);
+				newState = transferFunction(state, action);
+				updatedValue = updateQTable(state, action, newState, reward, qTable);
+				qTable[state][action] = updatedValue;
+				//printf("state : %d , action : %d newState : %d\n", state, action, newState);
+				state = newState;
+				steps++;
+			}
+			allSteps[trial][i] = steps;
+			steps = 0;
+			
 		}
-		printf("steps : %d\n", steps);
-		steps = 0; 
-		//generateQtable(qTable);
+		generateQtable(qTable);
 	}
+
+	/*for (int trial = 0; trial < NUMBER_OF_TRIALS; trial++)
+	{
+		for (int i = 0; i < NUMBER_OF_EPISODES; i++)
+		{
+			printf("number of steps at [%d][%d] : %d\n", trial, i, allSteps[trial][i]);
+		}
+	}*/
+
+	free(qTable);
 }
