@@ -112,11 +112,15 @@ double updateQTable(int state, int action, int nextState,int reward,double** qTa
 {
 	double updateValue = 0;
 	int nextAction;
+	double discount = 0.9;
+	double learningRate;
+	double diff;
 
 	nextAction = getAction(qTable, nextState);
+	diff = reward + discount * qTable[nextState][nextAction] - qTable[state][action];
+	updateValue = qTable[state][action] + learningRate * diff;
 
-
-	return updateValue = 0;
+	return updateValue;
 }
 int main()
 {
