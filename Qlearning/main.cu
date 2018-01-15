@@ -9,7 +9,7 @@
 #define NUMBER_OF_STATES 11
 #define NUMBER_OF_ACTIONS 4
 #define NUMBER_OF_TRIALS 50
-#define NUMBER_OF_EPISODES 200
+#define NUMBER_OF_EPISODES 20
 
 void seedRandom()
 {
@@ -165,7 +165,7 @@ __device__ double calculateSTD(int episodeCounter[],int stepTotal)
 	std = sqrt(std / NUMBER_OF_EPISODES);
 	return std;
 }
-__global__ void calculateAllSteps(int **StepsArray)
+__global__ void calculateAllSteps(int *StepsArray)
 {
 	__shared__ int epsiodeCounter[NUMBER_OF_EPISODES];
 	__shared__ int trialCounter[NUMBER_OF_TRIALS];
@@ -176,18 +176,22 @@ __global__ void calculateAllSteps(int **StepsArray)
 	{
 		for (int j = 0; j < NUMBER_OF_EPISODES; j++)
 		{
-			total += StepsArray[i][j];
-			epsiodeCounter[j] = StepsArray[i][j];
+			// gets the element from the array using the stride values for example if i is 2 and j is 1 then the index
+			// would be 201 meaning it is the second episode of the second trial;
+			total += StepsArray[i*200+j];
+			epsiodeCounter[j] = StepsArray[i];
 		}
 		std[i] = calculateSTD(epsiodeCounter,total);
 		trialCounter[i] = total;
 		total = 0;
 	}
+	printf("STD : %f", std[0]);
+	
 }
 int main()
 {
 	seedRandom();
-
+	int size = sizeof(int) * NUMBER_OF_EPISODES * NUMBER_OF_TRIALS;
 	double **qTable;
 	qTable = (double**)  malloc(NUMBER_OF_STATES * sizeof(double*));
 	for (int i = 0; i < NUMBER_OF_STATES; i++)
@@ -202,12 +206,18 @@ int main()
 				printf("vlaue at [%d][%d] : %f\n", i, j, qTable[i][j]);
 			}
 		}*/
-	int **allSteps;
-	allSteps = (int**)malloc(NUMBER_OF_TRIALS * sizeof(int*));
-	for (int i = 0; i < NUMBER_OF_TRIALS; i++)
+	int *allSteps;
+	allSteps = (int*)malloc((NUMBER_OF_TRIALS * NUMBER_OF_EPISODES)* sizeof(int));
+	/*allSteps[0] = (int*)malloc(NUMBER_OF_EPISODES * sizeof(int));
+	for (size_t i = 1; i < NUMBER_OF_TRIALS; i++)
+	{
+		allSteps[i] = allSteps[i - 1] + NUMBER_OF_EPISODES;
+	}*/
+	/*for (int i = 0; i < NUMBER_OF_TRIALS; i++)
 	{
 		allSteps[i] = (int*)malloc(sizeof(int)* NUMBER_OF_EPISODES);
-	}
+	}*/
+	
 
 	int state = 0;
 	int action = 0;
@@ -215,6 +225,7 @@ int main()
 	int reward = 0;
 	int steps = 0;
 	double updatedValue = 0;
+
 	for (int trial = 0; trial < NUMBER_OF_TRIALS; trial++)
 	{
 		for (int i = 0; i < NUMBER_OF_EPISODES; i++)
@@ -231,28 +242,22 @@ int main()
 				state = newState;
 				steps++;
 			}
-			allSteps[trial][i] = steps;
+			
+			allSteps[trial*NUMBER_OF_EPISODES + i] = steps;
+			
 			steps = 0;
 			
 		}
 		generateQtable(qTable);
 	}
-
-	for (int i = 0; i < NUMBER_OF_TRIALS; i++)
-	{
-		for (int j = 0; j < NUMBER_OF_EPISODES; j++)
-		{
-			printf("[%d][%d] : %d\n",i,j,allSteps[i][j]);
-		}
-	}
-
-	/*for (int trial = 0; trial < NUMBER_OF_TRIALS; trial++)
-	{
-		for (int i = 0; i < NUMBER_OF_EPISODES; i++)
-		{
-			printf("number of steps at [%d][%d] : %d\n", trial, i, allSteps[trial][i]);
-		}
-	}*/
+	int *d_allsteps;
+	
+	cudaError_t err = cudaMalloc((void**)&d_allsteps, size);
+	printf("CUDA malloc 1D array: %s\n", cudaGetErrorString(err));
+	err = cudaMemcpy(d_allsteps, allSteps,size, cudaMemcpyHostToDevice);
+	printf("CUDA memcpy 1D array: %s\n", cudaGetErrorString(err));
+	calculateAllSteps << <1,1>> > (d_allsteps);
+	cudaFree(d_allsteps);
 	free(allSteps);
 	free(qTable);
 }
