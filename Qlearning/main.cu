@@ -154,6 +154,36 @@ int rndState()
 	
 	return state;
 }
+__device__ double calculateSTD(int episodeCounter[],int stepTotal)
+{
+	double std;
+	double mean = stepTotal / NUMBER_OF_EPISODES;
+	for (int i = 0; i < NUMBER_OF_EPISODES; i++)
+	{
+		std += pow(episodeCounter[i] - mean, 2);
+	}
+	std = sqrt(std / NUMBER_OF_EPISODES);
+	return std;
+}
+__global__ void calculateAllSteps(int **StepsArray)
+{
+	__shared__ int epsiodeCounter[NUMBER_OF_EPISODES];
+	__shared__ int trialCounter[NUMBER_OF_TRIALS];
+	__shared__ int total;
+	double std[NUMBER_OF_TRIALS];
+	total = 0; 
+	for (int i = 0; i < NUMBER_OF_TRIALS;i++)
+	{
+		for (int j = 0; j < NUMBER_OF_EPISODES; j++)
+		{
+			total += StepsArray[i][j];
+			epsiodeCounter[j] = StepsArray[i][j];
+		}
+		std[i] = calculateSTD(epsiodeCounter,total);
+		trialCounter[i] = total;
+		total = 0;
+	}
+}
 int main()
 {
 	seedRandom();
@@ -208,6 +238,14 @@ int main()
 		generateQtable(qTable);
 	}
 
+	for (int i = 0; i < NUMBER_OF_TRIALS; i++)
+	{
+		for (int j = 0; j < NUMBER_OF_EPISODES; j++)
+		{
+			printf("[%d][%d] : %d\n",i,j,allSteps[i][j]);
+		}
+	}
+
 	/*for (int trial = 0; trial < NUMBER_OF_TRIALS; trial++)
 	{
 		for (int i = 0; i < NUMBER_OF_EPISODES; i++)
@@ -215,6 +253,6 @@ int main()
 			printf("number of steps at [%d][%d] : %d\n", trial, i, allSteps[trial][i]);
 		}
 	}*/
-
+	free(allSteps);
 	free(qTable);
 }
