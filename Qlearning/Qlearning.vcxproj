@@ -21,6 +21,9 @@
   <ItemGroup>
     <CudaCompile Include="main.cu" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="win-gettimeofday.h" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{43539A88-6D00-4076-818C-FEAE9D59CC99}</ProjectGuid>
     <RootNamespace>Qlearning</RootNamespace>

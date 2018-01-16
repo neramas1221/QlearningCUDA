@@ -1,11 +1,25 @@
 ﻿  Compiling CUDA source file main.cu...
   
   C:\Users\cwheeler\Documents\GitHub\QlearningCUDA\Qlearning>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin\nvcc.exe" -gencode=arch=compute_20,code=\"sm_20,compute_20\" --use-local-env --cl-version 2015 -ccbin "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64"  -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include"  -G   --keep-dir x64\Debug -maxrregcount=0  --machine 64 --compile -cudart static  -g   -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /FS /Zi /RTC1 /MDd " -o x64\Debug\main.cu.obj "C:\Users\cwheeler\Documents\GitHub\QlearningCUDA\Qlearning\main.cu" 
-C:/Users/cwheeler/Documents/GitHub/QlearningCUDA/Qlearning/main.cu(171): warning : variable "trialCounter" was set but never used
-C:/Users/cwheeler/Documents/GitHub/QlearningCUDA/Qlearning/main.cu(171): warning : variable "trialCounter" was set but never used
+C:/Users/cwheeler/Documents/GitHub/QlearningCUDA/Qlearning/main.cu(172): warning : variable "episodeStorage" was set but never used
+C:/Users/cwheeler/Documents/GitHub/QlearningCUDA/Qlearning/main.cu(173): warning : variable "trialStorage" was set but never used
+C:/Users/cwheeler/Documents/GitHub/QlearningCUDA/Qlearning/main.cu(287): warning : variable "avargeTrialSteps" was declared but never referenced
+C:/Users/cwheeler/Documents/GitHub/QlearningCUDA/Qlearning/main.cu(287): warning : variable "avrageEpisodeSteps" was declared but never referenced
+C:/Users/cwheeler/Documents/GitHub/QlearningCUDA/Qlearning/main.cu(287): warning : variable "bestSteps" was declared but never referenced
+C:/Users/cwheeler/Documents/GitHub/QlearningCUDA/Qlearning/main.cu(287): warning : variable "worstSteps" was declared but never referenced
+C:/Users/cwheeler/Documents/GitHub/QlearningCUDA/Qlearning/main.cu(172): warning : variable "episodeStorage" was set but never used
+C:/Users/cwheeler/Documents/GitHub/QlearningCUDA/Qlearning/main.cu(173): warning : variable "trialStorage" was set but never used
+C:/Users/cwheeler/Documents/GitHub/QlearningCUDA/Qlearning/main.cu(287): warning : variable "avargeTrialSteps" was declared but never referenced
+C:/Users/cwheeler/Documents/GitHub/QlearningCUDA/Qlearning/main.cu(287): warning : variable "avrageEpisodeSteps" was declared but never referenced
+C:/Users/cwheeler/Documents/GitHub/QlearningCUDA/Qlearning/main.cu(287): warning : variable "bestSteps" was declared but never referenced
+C:/Users/cwheeler/Documents/GitHub/QlearningCUDA/Qlearning/main.cu(287): warning : variable "worstSteps" was declared but never referenced
 CUDACOMPILE : nvcc warning : The 'compute_20', 'sm_20', and 'sm_21' architectures are deprecated, and may be removed in a future release (Use -Wno-deprecated-gpu-targets to suppress warning).
   main.cu
-C:/Users/cwheeler/Documents/GitHub/QlearningCUDA/Qlearning/main.cu(16): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+C:/Users/cwheeler/Documents/GitHub/QlearningCUDA/Qlearning/main.cu(18): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+C:/Users/cwheeler/Documents/GitHub/QlearningCUDA/Qlearning/main.cu(287): warning C4101: 'worstSteps': unreferenced local variable
+C:/Users/cwheeler/Documents/GitHub/QlearningCUDA/Qlearning/main.cu(287): warning C4101: 'bestSteps': unreferenced local variable
+C:/Users/cwheeler/Documents/GitHub/QlearningCUDA/Qlearning/main.cu(287): warning C4101: 'avargeTrialSteps': unreferenced local variable
+C:/Users/cwheeler/Documents/GitHub/QlearningCUDA/Qlearning/main.cu(287): warning C4101: 'avrageEpisodeSteps': unreferenced local variable
   Qlearning.vcxproj -> C:\Users\cwheeler\Documents\GitHub\QlearningCUDA\x64\Debug\Qlearning.exe
   Qlearning.vcxproj -> C:\Users\cwheeler\Documents\GitHub\QlearningCUDA\x64\Debug\Qlearning.pdb (Full PDB)
   copy "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin\cudart*.dll" "C:\Users\cwheeler\Documents\GitHub\QlearningCUDA\x64\Debug\"

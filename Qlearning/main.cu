@@ -1,15 +1,17 @@
 #include <stdio.h>
-#include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
 #include <time.h>
+#include "win-gettimeofday.h"
+
 
 #define NUMBER_OF_STATES 11
 #define NUMBER_OF_ACTIONS 4
 #define NUMBER_OF_TRIALS 50
-#define NUMBER_OF_EPISODES 20
+#define NUMBER_OF_EPISODES 200
 
 void seedRandom()
 {
@@ -165,33 +167,65 @@ __device__ double calculateSTD(int episodeCounter[],int stepTotal)
 	std = sqrt(std / NUMBER_OF_EPISODES);
 	return std;
 }
-__global__ void calculateAllSteps(int *StepsArray)
+__global__ void calculateAllSteps(int *StepsArray,int* returnData)
 {
-	__shared__ int epsiodeCounter[NUMBER_OF_EPISODES];
-	__shared__ int trialCounter[NUMBER_OF_TRIALS];
-	__shared__ int total;
-	double std[NUMBER_OF_TRIALS];
+	__shared__ int episodeStorage[NUMBER_OF_EPISODES];
+	__shared__ int trialStorage[NUMBER_OF_TRIALS];
+ 	__shared__ int total;
+	__shared__ int *allSteps;
+	allSteps = StepsArray;
+	__shared__ int episodeTotal;
+	//double std[NUMBER_OF_TRIALS];
+	__shared__ int worstSteps;
+	__shared__ int bestSteps;
+	 bestSteps = 100000;
+	 worstSteps = 0;
 	total = 0; 
+	episodeTotal = 0;
+	__syncthreads();
 	for (int i = 0; i < NUMBER_OF_TRIALS;i++)
 	{
 		for (int j = 0; j < NUMBER_OF_EPISODES; j++)
 		{
-			// gets the element from the array using the stride values for example if i is 2 and j is 1 then the index
-			// would be 201 meaning it is the second episode of the second trial;
-			total += StepsArray[i*200+j];
-			epsiodeCounter[j] = StepsArray[i];
+			/* gets the element from the array using the stride values for example if i is 2 and j is 1 then the index
+			 would be 201 meaning it is the second episode of the second trial;*/
+			total += allSteps[i*NUMBER_OF_EPISODES +j];
+			episodeStorage[j] = allSteps[i*NUMBER_OF_EPISODES +j];
+		
 		}
-		std[i] = calculateSTD(epsiodeCounter,total);
-		trialCounter[i] = total;
+		//std[i] = calculateSTD(episodeStorage,total);
+		/*printf("Best value %d\n",bestValues);
+		printf("worst value %d\n", worstValue);*/ 
+		trialStorage[i] = total;
+		episodeTotal += (total / 200);
 		total = 0;
 	}
-	printf("STD : %f", std[0]);
-	
+
+	for (int i = 0; i < NUMBER_OF_EPISODES*NUMBER_OF_TRIALS; i++)
+	{
+		if (bestSteps > allSteps[i])
+		{
+			bestSteps = allSteps[i];
+		}
+		if (worstSteps < allSteps[i])
+		{
+			worstSteps = allSteps[i];
+		}
+		__syncthreads();
+	}
+
+	__syncthreads();
+	returnData[0] = episodeTotal;
+	returnData[1] = episodeTotal / 50;
+	returnData[2] = bestSteps;
+	returnData[3] = worstSteps;
 }
 int main()
 {
+	long long totalProgrammeTimmer = start_timer();
 	seedRandom();
 	int size = sizeof(int) * NUMBER_OF_EPISODES * NUMBER_OF_TRIALS;
+	int returnSize = sizeof(int) * 4;
 	double **qTable;
 	qTable = (double**)  malloc(NUMBER_OF_STATES * sizeof(double*));
 	for (int i = 0; i < NUMBER_OF_STATES; i++)
@@ -199,13 +233,7 @@ int main()
 		qTable[i] = (double*)malloc(sizeof(double)*NUMBER_OF_ACTIONS);
 	}
 	generateQtable(qTable);
-		/*for (int i = 0; i < NUMBER_OF_STATES; i++)
-		{
-			for (int j = 0; j < NUMBER_OF_ACTIONS; j++)
-			{
-				printf("vlaue at [%d][%d] : %f\n", i, j, qTable[i][j]);
-			}
-		}*/
+		
 	int *allSteps;
 	allSteps = (int*)malloc((NUMBER_OF_TRIALS * NUMBER_OF_EPISODES)* sizeof(int));
 	/*allSteps[0] = (int*)malloc(NUMBER_OF_EPISODES * sizeof(int));
@@ -238,7 +266,7 @@ int main()
 				newState = transferFunction(state, action);
 				updatedValue = updateQTable(state, action, newState, reward, qTable);
 				qTable[state][action] = updatedValue;
-				//printf("state : %d , action : %d newState : %d\n", state, action, newState);
+				
 				state = newState;
 				steps++;
 			}
@@ -250,14 +278,56 @@ int main()
 		}
 		generateQtable(qTable);
 	}
+
+
+	int *returnData;
+	returnData =(int*) malloc(4 * sizeof(int));
 	int *d_allsteps;
-	
+	int *d_returnData;
+	int avargeTrialSteps, avrageEpisodeSteps, bestSteps,worstSteps;
+
+	long long transferTimmer = start_timer();
+
 	cudaError_t err = cudaMalloc((void**)&d_allsteps, size);
+
 	printf("CUDA malloc 1D array: %s\n", cudaGetErrorString(err));
+
+	err = cudaMalloc((void**)&d_returnData, returnSize);
+
+	printf("CUDA malloc 1D array: %s\n", cudaGetErrorString(err));
+
 	err = cudaMemcpy(d_allsteps, allSteps,size, cudaMemcpyHostToDevice);
+
 	printf("CUDA memcpy 1D array: %s\n", cudaGetErrorString(err));
-	calculateAllSteps << <1,1>> > (d_allsteps);
+
+	err = cudaMemcpy(d_returnData,returnData,returnSize,cudaMemcpyHostToDevice);
+
+	printf("CUDA memcpy 1D array of nothing: %s\n", cudaGetErrorString(err));
+
+	stop_timer(transferTimmer,"Transfer timer");
+
+	long long GPUComput = start_timer();
+	int gridSize = (int)ceil(NUMBER_OF_EPISODES*NUMBER_OF_TRIALS / 16);
+	dim3 dimGrid(gridSize,1,1);
+	dim3 dimBlock(1,1,1);
+
+	calculateAllSteps << <gridSize,1>> > (d_allsteps, d_returnData);
+
+	err = cudaMemcpy(returnData, d_returnData, returnSize, cudaMemcpyDeviceToHost);
+
+	printf("CUDA memcpy data back: %s\n", cudaGetErrorString(err));
+	stop_timer(GPUComput, "Computaion time");
+	printf("Best value %d\n", returnData[2]);
+	printf("worst value %d\n", returnData[3]);
+	printf("Avarage steps per tiral : %d\n", returnData[0]);
+	printf("Avarage steps per episode : %d\n", returnData[1]);
+	stop_timer(totalProgrammeTimmer, "Total programme time");
+
 	cudaFree(d_allsteps);
+
+	cudaFree(d_returnData);
+
 	free(allSteps);
+
 	free(qTable);
 }
