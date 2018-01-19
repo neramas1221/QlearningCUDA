@@ -156,15 +156,15 @@ int rndState()
 	
 	return state;
 }
-__device__ double calculateSTD(int episodeCounter[],int stepTotal)
+__device__ float calculateSTD(int episodeCounter[],int stepTotal,int size)
 {
-	double std;
-	double mean = stepTotal / NUMBER_OF_EPISODES;
-	for (int i = 0; i < NUMBER_OF_EPISODES; i++)
+	float std;
+	float mean = stepTotal / size;
+	for (int i = 0; i < size; i++)
 	{
 		std += pow(episodeCounter[i] - mean, 2);
 	}
-	std = sqrt(std / NUMBER_OF_EPISODES);
+	std = sqrt(std / size);
 	return std;
 }
 __global__ void calculateAllSteps(int *StepsArray)
@@ -175,13 +175,15 @@ __global__ void calculateAllSteps(int *StepsArray)
 	__shared__ int *allSteps;
 	allSteps = StepsArray;
 	__shared__ int episodeTotal;
-	//__shared__ double std[NUMBER_OF_TRIALS];
+	__shared__ float std[NUMBER_OF_TRIALS];
 	__shared__ int worstSteps;
 	__shared__ int bestSteps;
+	__shared__ int totalSteps;
 	 bestSteps = 100000;
 	 worstSteps = 0;
 	total = 0; 
 	episodeTotal = 0;
+	totalSteps = 0;
 	__syncthreads();
 	for (int i = 0; i < NUMBER_OF_TRIALS;i++)
 	{
@@ -209,87 +211,7 @@ __global__ void calculateAllSteps(int *StepsArray)
 			total += allSteps[i*NUMBER_OF_EPISODES + j+17];
 			total += allSteps[i*NUMBER_OF_EPISODES + j+18];
 			total += allSteps[i*NUMBER_OF_EPISODES + j+19];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j+20];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j +21];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 22];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 23];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 24];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 25];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 26];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 27];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 28];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 29];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 30];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 31];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 32];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 33];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 34];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 35];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 36];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 37];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 38];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 39];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j+ 40];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 41];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 42];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 43];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 44];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 45];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 46];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 47];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 48];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 49];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 50];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 51];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 52];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 53];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 54];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 55];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 56];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 57];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 58];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 59];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j+ 60];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 61];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 62];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 63];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 64];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 65];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 66];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 67];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 68];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 69];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 70];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 71];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 72];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 73];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 74];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 75];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 76];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 77];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 78];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 79];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j+80];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 81];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 82];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 83];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 84];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 85];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 86];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 87];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 88];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 89];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 90];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 91];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 92];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 93];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 94];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 95];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 96];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 97];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 98];
-			//total += allSteps[i*NUMBER_OF_EPISODES + j + 99];
-			/*episodeStorage[j] = allSteps[i*NUMBER_OF_EPISODES + j];
+			episodeStorage[j] = allSteps[i*NUMBER_OF_EPISODES + j];
 			episodeStorage[j] = allSteps[i*NUMBER_OF_EPISODES + j+1];
 			episodeStorage[j] = allSteps[i*NUMBER_OF_EPISODES + j+2];
 			episodeStorage[j] = allSteps[i*NUMBER_OF_EPISODES + j+3];
@@ -308,14 +230,22 @@ __global__ void calculateAllSteps(int *StepsArray)
 			episodeStorage[j] = allSteps[i*NUMBER_OF_EPISODES + j+16];
 			episodeStorage[j] = allSteps[i*NUMBER_OF_EPISODES + j+17];
 			episodeStorage[j] = allSteps[i*NUMBER_OF_EPISODES + j+18];
-			episodeStorage[j] = allSteps[i*NUMBER_OF_EPISODES + j+19];*/
-		
+			episodeStorage[j] = allSteps[i*NUMBER_OF_EPISODES + j+19];
 		}
-		//std[i] = calculateSTD(episodeStorage,total);
+		std[i] = calculateSTD(episodeStorage,total,NUMBER_OF_EPISODES);
 		trialStorage[i] = total;
+		totalSteps += total;
 		episodeTotal += (total / 200);
 		total = 0;
 	}
+
+	float aveStd = 0;
+	float mean = totalSteps / NUMBER_OF_TRIALS;
+	for (int i = 0; i < NUMBER_OF_TRIALS; i++)
+	{
+		aveStd += pow(std[i] - mean, 2);
+	}
+	aveStd = sqrt(aveStd / NUMBER_OF_TRIALS);
 
 	for (int i = 0; i < NUMBER_OF_EPISODES*NUMBER_OF_TRIALS; i++)
 	{
@@ -328,15 +258,6 @@ __global__ void calculateAllSteps(int *StepsArray)
 			worstSteps = allSteps[i];
 		}
 		__syncthreads();
-		//if (bestSteps > allSteps[i+1])
-		//{
-		//	bestSteps = allSteps[i+1];
-		//}
-		//if (worstSteps < allSteps[i+1])
-		//{
-		//	worstSteps = allSteps[i+1];
-		//}
-		//__syncthreads();
 	}
 
 	__syncthreads();
@@ -345,15 +266,14 @@ __global__ void calculateAllSteps(int *StepsArray)
 	//printf("id : %d\n", id);
 	if (id == 1)
 	{
+		printf("Data from trials \n\n");
+		printf("avarge Standard deviation : %f\n", aveStd);
 		printf("Best value %d\n", bestSteps);
 		printf("worst value %d\n", worstSteps);
 		printf("Avarage steps per tiral : %d\n",episodeTotal);
 		printf("Avarage steps per episode : %d\n", episodeTotal/50);
+		printf("\n\n");
 	}
-	//returnData[0] = episodeTotal;
-	//returnData[1] = episodeTotal / 50;
-	//returnData[2] = bestSteps;
-	//returnData[3] = worstSteps;
 }
 int main()
 {
